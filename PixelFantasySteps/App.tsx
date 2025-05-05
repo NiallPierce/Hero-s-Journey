@@ -1,12 +1,12 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, SafeAreaView } from 'react-native';
+import React from 'react';
+import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import { StepTracker } from './src/components/StepTracker';
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <StepTracker />
-      <StatusBar style="auto" />
     </SafeAreaView>
   );
 }
