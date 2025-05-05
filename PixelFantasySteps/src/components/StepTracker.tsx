@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Achievements } from './Achievements';
@@ -10,6 +10,7 @@ import { CharacterAppearance } from './CharacterAppearance';
 import { CombatSystem } from './CombatSystem';
 import { ShopSystem } from './ShopSystem';
 import InventorySystem from './InventorySystem';
+import { colors, typography, spacing, borderRadius, shadows } from '../styles/theme';
 
 interface StepData {
   steps: number;
@@ -58,6 +59,9 @@ export const StepTracker: React.FC = () => {
 
   // Calculate steps needed for next level (1000 steps per level)
   const stepsToNextLevel = 1000 - (steps % 1000);
+
+  // Add simulation state
+  const [simulatedSteps, setSimulatedSteps] = useState<number>(0);
 
   useEffect(() => {
     const checkPedometerAvailability = async () => {
@@ -191,12 +195,70 @@ export const StepTracker: React.FC = () => {
     }
   };
 
+  const simulateSteps = async () => {
+    const newSteps = steps + 1000;
+    setSteps(newSteps);
+    setSimulatedSteps(prev => prev + 1000);
+    
+    // Save to AsyncStorage
+    try {
+      await AsyncStorage.setItem('stepData', JSON.stringify({
+        steps: newSteps,
+        lastUpdated: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error saving simulated steps:', error);
+    }
+  };
+
+  const resetProgress = async () => {
+    try {
+      // Reset steps and level
+      setSteps(0);
+      setLevel(1);
+      setLevelProgress(0);
+      setSimulatedSteps(0);
+      
+      // Clear AsyncStorage data
+      await AsyncStorage.removeItem('stepData');
+      await AsyncStorage.removeItem('characterData');
+      
+      // Reset character class and stats
+      setCharacterClass(null);
+      setPlayerStats({
+        health: 100,
+        maxHealth: 100,
+        attack: 10,
+        defense: 5,
+        energy: 0
+      });
+    } catch (error) {
+      console.error('Error resetting progress:', error);
+    }
+  };
+
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Pixel Fantasy Steps</Text>
           <Text style={styles.subtitle}>Level {level} {characterClass ? `- ${characterClass}` : ''}</Text>
+          <View style={styles.headerButtons}>
+            {Platform.OS === 'web' && (
+              <TouchableOpacity 
+                style={styles.simulateButton} 
+                onPress={simulateSteps}
+              >
+                <Text style={styles.simulateButtonText}>Simulate 1000 Steps</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity 
+              style={styles.resetButton} 
+              onPress={resetProgress}
+            >
+              <Text style={styles.resetButtonText}>Reset Progress</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.statsContainer}>
@@ -242,49 +304,109 @@ export const StepTracker: React.FC = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   container: {
-    padding: 20,
+    padding: spacing.lg,
   },
   header: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.medium,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#2c3e50',
+    ...typography.title,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#7f8c8d',
+    ...typography.subtitle,
+    color: colors.text.secondary,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.medium,
   },
   statsText: {
-    fontSize: 16,
+    ...typography.body,
+    color: colors.text.primary,
     fontWeight: 'bold',
-    color: '#2c3e50',
   },
   button: {
-    backgroundColor: '#27ae60',
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    ...shadows.medium,
   },
   buttonActive: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: colors.status.success,
   },
   buttonText: {
-    fontSize: 18,
+    ...typography.subtitle,
+    color: colors.text.primary,
     fontWeight: 'bold',
-    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  simulateButton: {
+    backgroundColor: colors.secondary,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    ...shadows.medium,
+  },
+  simulateButtonText: {
+    color: colors.text.primary,
+    ...typography.subtitle,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  resetButton: {
+    backgroundColor: colors.status.error,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    ...shadows.medium,
+  },
+  resetButtonText: {
+    color: colors.text.primary,
+    ...typography.subtitle,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 }); 

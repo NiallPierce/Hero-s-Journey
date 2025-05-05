@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Animated, ViewStyle } from 'react-native';
+import { Card } from './common/Card';
+import { colors, typography, spacing, shadows } from '../styles/theme';
 
 interface Achievement {
   id: string;
@@ -44,8 +46,8 @@ const ACHIEVEMENTS: Achievement[] = [
   },
 ];
 
-export const Achievements: React.FC<AchievementsProps> = ({ currentSteps }) => {
-  const checkAchievements = () => {
+export const Achievements: React.FC<AchievementsProps> = ({ currentSteps }: AchievementsProps) => {
+  const checkAchievements = (): Achievement[] => {
     return ACHIEVEMENTS.map(achievement => ({
       ...achievement,
       unlocked: currentSteps >= achievement.stepsRequired,
@@ -58,24 +60,28 @@ export const Achievements: React.FC<AchievementsProps> = ({ currentSteps }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Achievements</Text>
       {achievements.map(achievement => (
-        <View
+        <Card
           key={achievement.id}
           style={[
             styles.achievementCard,
             achievement.unlocked ? styles.unlocked : styles.locked,
-          ]}
+          ] as ViewStyle}
         >
-          <Text style={styles.achievementTitle}>{achievement.title}</Text>
-          <Text style={styles.achievementDescription}>
-            {achievement.description}
-          </Text>
-          <Text style={styles.stepsRequired}>
-            {achievement.stepsRequired.toLocaleString()} steps
-          </Text>
-          {achievement.unlocked && (
-            <Text style={styles.unlockedText}>✓ Unlocked!</Text>
-          )}
-        </View>
+          <View style={styles.achievementContent}>
+            <Text style={styles.achievementTitle}>{achievement.title}</Text>
+            <Text style={styles.achievementDescription}>
+              {achievement.description}
+            </Text>
+            <Text style={styles.stepsRequired}>
+              {achievement.stepsRequired.toLocaleString()} steps
+            </Text>
+            {achievement.unlocked && (
+              <View style={styles.unlockedBadge}>
+                <Text style={styles.unlockedText}>✓ Unlocked!</Text>
+              </View>
+            )}
+          </View>
+        </Card>
       ))}
     </View>
   );
@@ -83,46 +89,54 @@ export const Achievements: React.FC<AchievementsProps> = ({ currentSteps }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: spacing.md,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 15,
+    ...typography.title,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
   },
   achievementCard: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
+    marginBottom: spacing.sm,
+  },
+  achievementContent: {
+    position: 'relative',
   },
   unlocked: {
-    backgroundColor: '#e8f5e9',
-    borderColor: '#81c784',
+    backgroundColor: colors.status.success + '10',
+    borderColor: colors.status.success,
   },
   locked: {
-    backgroundColor: '#f5f5f5',
-    borderColor: '#bdbdbd',
+    backgroundColor: colors.background,
+    borderColor: colors.border,
   },
   achievementTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 5,
+    ...typography.subtitle,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
   },
   achievementDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
+    ...typography.body,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
   },
   stepsRequired: {
-    fontSize: 12,
-    color: '#888',
+    ...typography.small,
+    color: colors.text.secondary,
+  },
+  unlockedBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: colors.status.success,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: spacing.sm,
+    ...shadows.small,
   },
   unlockedText: {
-    color: '#2e7d32',
-    fontWeight: 'bold',
-    marginTop: 5,
+    ...typography.small,
+    color: colors.surface,
+    fontWeight: '700',
   },
 }); 
