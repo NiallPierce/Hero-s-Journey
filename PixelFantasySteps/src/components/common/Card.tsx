@@ -1,82 +1,53 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Animated, ViewStyle, StyleProp } from 'react-native';
-import { colors, shadows, borderRadius } from '../../styles/theme';
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { colors, spacing } from '../../styles/theme';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-  animated?: boolean;
+  style?: ViewStyle;
+  variant?: 'default' | 'elevated' | 'outlined';
 }
 
-export const Card: React.FC<CardProps> = ({ children, style, animated = true }) => {
-  const scale = new Animated.Value(1);
-  const opacity = new Animated.Value(0);
-
-  useEffect(() => {
-    if (animated) {
-      Animated.parallel([
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-          friction: 8,
-          tension: 40,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+export const Card: React.FC<CardProps> = ({
+  children,
+  style,
+  variant = 'default',
+}) => {
+  const getCardStyle = () => {
+    switch (variant) {
+      case 'elevated':
+        return {
+          backgroundColor: colors.surface,
+          shadowColor: colors.accent,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 8,
+        };
+      case 'outlined':
+        return {
+          backgroundColor: 'transparent',
+          borderColor: colors.border,
+          borderWidth: 2,
+        };
+      default:
+        return {
+          backgroundColor: colors.card,
+        };
     }
-  }, [animated]);
+  };
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale }],
-          opacity,
-        },
-        style,
-      ]}
-    >
-      <View style={styles.content}>{children}</View>
-      <View style={styles.glow} />
-    </Animated.View>
+    <View style={[styles.card, getCardStyle(), style]}>
+      {children}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    ...shadows.large,
-  },
-  content: {
-    padding: 16,
-    position: 'relative',
-    zIndex: 1,
-  },
-  glow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: borderRadius.lg,
-    opacity: 0.1,
-    shadowColor: colors.accent,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
+  card: {
+    borderRadius: spacing.md,
+    padding: spacing.md,
+    marginVertical: spacing.sm,
   },
 }); 

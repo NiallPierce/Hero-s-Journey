@@ -8,6 +8,7 @@ export const colors = {
   background: '#10002B', // Deepest purple-black
   surface: '#240046', // Dark purple
   card: '#3C096C', // Rich purple-black
+  disabled: '#4A4A4A', // Muted gray for disabled states
   
   // Text colors
   text: {
@@ -39,6 +40,7 @@ export const colors = {
     hero: '#F72585', // Vibrant pink
     champion: '#B5179E', // Deep pink
     master: '#FF9E00', // Warm orange
+    grandmaster: '#FFD60A', // Bright yellow
     legend: '#FFD60A', // Bright yellow
     mythic: '#F72585', // Vibrant pink
     divine: '#B5179E', // Deep pink

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
 import { colors } from '../../styles/theme';
 
@@ -7,128 +7,98 @@ interface ConfettiProps {
   onComplete?: () => void;
 }
 
-interface ConfettiPiece {
-  x: number;
-  y: number;
-  rotation: number;
-  scale: number;
-  color: string;
-}
+type StatusColor = 'success' | 'warning' | 'info';
 
-const COLORS = [
-  colors.primary,
-  colors.secondary,
-  colors.status.success,
-  colors.status.warning,
-  colors.status.error,
-];
-
-const Confetti: React.FC<ConfettiProps> = ({
+export const Confetti: React.FC<ConfettiProps> = ({
   duration = 3000,
   onComplete,
 }) => {
-  const pieces = useRef<ConfettiPiece[]>([]).current;
-  const animations = useRef<Animated.Value[]>([]).current;
+  const particles = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+    y: new Animated.Value(-20),
+    rotation: new Animated.Value(0),
+    scale: new Animated.Value(1),
+    color: colors.status[['success', 'warning', 'info'][i % 3] as StatusColor],
+  }));
 
   useEffect(() => {
-    const { width, height } = Dimensions.get('window');
-    const numPieces = 150;
+    const animations = particles.map((particle) => {
+      const randomX = Math.random() * 200 - 100;
+      const randomY = Math.random() * 500 + 200;
+      const randomRotation = Math.random() * 360;
 
-    // Initialize confetti pieces
-    for (let i = 0; i < numPieces; i++) {
-      pieces.push({
-        x: Math.random() * width,
-        y: -50, // Start above the screen
-        rotation: Math.random() * 360,
-        scale: 0.8 + Math.random() * 0.4, // Slightly smaller pieces
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      });
-
-      animations.push(new Animated.Value(0));
-    }
-
-    // Animate each piece
-    const animationPromises = animations.map((anim: Animated.Value, index: number) => {
-      return new Promise<void>((resolve) => {
+      return Animated.parallel([
+        Animated.timing(particle.x, {
+          toValue: randomX,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.y, {
+          toValue: randomY,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.rotation, {
+          toValue: randomRotation,
+          duration,
+          useNativeDriver: true,
+        }),
         Animated.sequence([
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: duration * (0.5 + Math.random() * 0.5), // Slower animation
+          Animated.timing(particle.scale, {
+            toValue: 1.2,
+            duration: duration / 2,
             useNativeDriver: true,
           }),
-        ]).start(() => resolve());
-      });
+          Animated.timing(particle.scale, {
+            toValue: 0,
+            duration: duration / 2,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]);
     });
 
-    Promise.all(animationPromises).then(() => {
+    Animated.parallel(animations).start(() => {
       onComplete?.();
     });
-
-    return () => {
-      animations.forEach((anim: Animated.Value) => anim.stopAnimation());
-    };
-  }, []);
+  }, [duration, onComplete]);
 
   return (
     <View style={styles.container}>
-      {pieces.map((piece: ConfettiPiece, index: number) => {
-        const translateY = animations[index].interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, Dimensions.get('window').height + 100],
-        });
-
-        const translateX = animations[index].interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [0, Math.random() * 200 - 100, Math.random() * 400 - 200],
-        });
-
-        const rotate = animations[index].interpolate({
-          inputRange: [0, 1],
-          outputRange: [`${piece.rotation}deg`, `${piece.rotation + 720}deg`],
-        });
-
-        return (
-          <Animated.View
-            key={index}
-            style={[
-              styles.piece,
-              {
-                left: piece.x,
-                top: piece.y,
-                backgroundColor: piece.color,
-                transform: [
-                  { translateY },
-                  { translateX },
-                  { rotate },
-                  { scale: piece.scale },
-                ],
-              },
-            ]}
-          />
-        );
-      })}
+      {particles.map((particle) => (
+        <Animated.View
+          key={particle.id}
+          style={[
+            styles.particle,
+            {
+              backgroundColor: particle.color,
+              transform: [
+                { translateX: particle.x },
+                { translateY: particle.y },
+                { rotate: particle.rotation.interpolate({
+                    inputRange: [0, 360],
+                    outputRange: ['0deg', '360deg'],
+                  }) },
+                { scale: particle.scale },
+              ],
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     pointerEvents: 'none',
-    zIndex: 9999,
-    elevation: 9999,
   },
-  piece: {
+  particle: {
     position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    opacity: 0.8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-});
-
-export default Confetti; 
+}); 

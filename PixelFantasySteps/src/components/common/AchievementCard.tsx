@@ -1,126 +1,216 @@
-import React from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, spacing, typography } from '../../styles/theme';
-import { ProgressBar } from './ProgressBar';
+import { TextStyle } from 'react-native';
 
-interface AchievementCardProps {
-  title: string;
-  description: string;
-  icon: string;
-  progress: number;
-  isUnlocked: boolean;
-  style?: any;
-}
-
-export const AchievementCard: React.FC<AchievementCardProps> = ({
-  title,
-  description,
-  icon,
-  progress,
-  isUnlocked,
-  style,
-}) => {
-  const glowAnim = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    if (isUnlocked) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    }
-  }, [isUnlocked]);
-
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
-
-  return (
-    <View style={[styles.container, style]}>
-      <Animated.View
-        style={[
-          styles.glow,
-          {
-            opacity: isUnlocked ? glowOpacity : 0,
-            backgroundColor: colors.accent,
-          },
-        ]}
-      />
-      <View style={styles.header}>
-        <Icon
-          name={isUnlocked ? 'trophy' : icon}
-          size={24}
-          color={isUnlocked ? colors.status.success : colors.accent}
-          style={styles.icon}
-        />
-        <Text style={styles.title}>{title}</Text>
-      </View>
-      <Text style={styles.description}>{description}</Text>
-      <View style={styles.progressContainer}>
-        <ProgressBar
-          progress={progress}
-          height={8}
-          color={isUnlocked ? colors.status.success : colors.accent}
-        />
-        <Text style={styles.progressText}>{progress}%</Text>
-      </View>
-    </View>
-  );
+export const colors = {
+  // Main theme colors
+  primary: '#7B2CBF', // Rich purple
+  secondary: '#3A0CA3', // Deep indigo
+  accent: '#F72585', // Vibrant pink
+  background: '#10002B', // Deepest purple-black
+  surface: '#240046', // Dark purple
+  card: '#3C096C', // Rich purple-black
+  disabled: '#4A4A4A', // Muted gray for disabled states
+  
+  // Text colors
+  text: {
+    primary: '#E9ECEF', // Off-white
+    secondary: '#CED4DA', // Light gray
+    accent: '#FF9E00', // Warm gold
+    dark: '#212529', // Dark gray
+  },
+  
+  // Status colors
+  status: {
+    success: '#4CC9F0', // Bright cyan
+    warning: '#FF9E00', // Warm orange
+    error: '#F72585', // Vibrant pink
+    info: '#4361EE', // Bright blue
+  },
+  
+  // UI elements
+  border: '#5A189A', // Medium purple
+  divider: '#3C096C', // Rich purple-black
+  overlay: 'rgba(16, 0, 43, 0.9)', // Dark purple overlay
+  
+  // Rank colors - Gradient progression from cool to warm
+  ranks: {
+    novice: '#4361EE', // Bright blue
+    apprentice: '#3A0CA3', // Deep indigo
+    adventurer: '#4CC9F0', // Bright cyan
+    explorer: '#4895EF', // Sky blue
+    hero: '#F72585', // Vibrant pink
+    champion: '#B5179E', // Deep pink
+    master: '#FF9E00', // Warm orange
+    grandmaster: '#FFD60A', // Bright yellow
+    legend: '#FFD60A', // Bright yellow
+    mythic: '#F72585', // Vibrant pink
+    divine: '#B5179E', // Deep pink
+    celestial: '#4CC9F0', // Bright cyan
+    cosmic: '#3A0CA3', // Deep indigo
+    eternal: '#4361EE', // Bright blue
+    transcendent: '#F72585', // Vibrant pink
+    omnipotent: '#FFD60A', // Bright yellow
+  }
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+// Define the typography style type
+type TypographyStyle = TextStyle;
+
+// Define the typography object type
+interface Typography {
+  fontFamily: string;
+  fontSize: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+  };
+  xs: number;
+  sm: number;
+  md: number;
+  lg: number;
+  xl: number;
+  xxl: number;
+  title: TypographyStyle;
+  subtitle: TypographyStyle;
+  body: TypographyStyle;
+  caption: TypographyStyle;
+  small: TypographyStyle;
+  styles: Record<string, TypographyStyle>;
+}
+
+export const typography: Typography = {
+  fontFamily: 'System',
+  fontSize: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
   },
-  glow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  icon: {
-    marginRight: spacing.sm,
-  },
+  // Add direct access to font sizes
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 20,
+  xxl: 24,
+  // Make style presets directly accessible
   title: {
-    ...typography.h3,
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text.primary,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  subtitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: colors.text.primary,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400',
     color: colors.text.primary,
   },
-  description: {
-    ...typography.body,
+  caption: {
+    fontSize: 14,
+    fontWeight: '400',
     color: colors.text.secondary,
-    marginBottom: spacing.md,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressText: {
-    ...typography.caption,
+  small: {
+    fontSize: 12,
+    fontWeight: '400',
     color: colors.text.secondary,
-    marginLeft: spacing.sm,
   },
-}); 
+  // Keep the styles object for backward compatibility
+  styles: {
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text.primary,
+      textShadowColor: 'rgba(0, 0, 0, 0.5)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 2,
+    },
+    subtitle: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: colors.text.primary,
+      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 1,
+    },
+    body: {
+      fontSize: 16,
+      fontWeight: '400',
+      color: colors.text.primary,
+    },
+    caption: {
+      fontSize: 14,
+      fontWeight: '400',
+      color: colors.text.secondary,
+    },
+    small: {
+      fontSize: 12,
+      fontWeight: '400',
+      color: colors.text.secondary,
+    },
+  },
+};
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const borderRadius = {
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  xxl: 24,
+};
+
+export const shadows = {
+  small: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  medium: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  large: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+}; 

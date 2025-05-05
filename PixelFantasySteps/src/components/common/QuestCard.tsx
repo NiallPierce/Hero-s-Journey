@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing, typography } from '../../styles/theme';
 import { ProgressBar } from './ProgressBar';
 
 interface QuestCardProps {
   title: string;
   description: string;
-  reward: string;
+  reward: number;
   progress: number;
   isCompleted: boolean;
+  onPress?: () => void;
   style?: any;
 }
 
@@ -19,121 +19,109 @@ export const QuestCard: React.FC<QuestCardProps> = ({
   reward,
   progress,
   isCompleted,
+  onPress,
   style,
 }) => {
-  const glowAnim = React.useRef(new Animated.Value(0)).current;
+  const glowAnim = new Animated.Value(0);
 
   React.useEffect(() => {
     if (isCompleted) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 1500,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0.5,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [isCompleted]);
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
-
   return (
-    <View style={[styles.container, style]}>
-      <Animated.View
-        style={[
-          styles.glow,
-          {
-            opacity: isCompleted ? glowOpacity : 0,
-            backgroundColor: colors.accent,
-          },
-        ]}
-      />
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: glowAnim.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [1, 0.8, 1],
+          }),
+          transform: [
+            {
+              scale: glowAnim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [1, 1.05, 1],
+              }),
+            },
+          ],
+        },
+        style,
+      ]}
+    >
       <View style={styles.header}>
-        <Icon
-          name={isCompleted ? 'check-circle' : 'sword'}
-          size={24}
-          color={isCompleted ? colors.status.success : colors.accent}
-          style={styles.icon}
-        />
         <Text style={styles.title}>{title}</Text>
+        <Text style={styles.reward}>+{reward} coins</Text>
       </View>
       <Text style={styles.description}>{description}</Text>
-      <View style={styles.rewardContainer}>
-        <Icon name="gift" size={20} color={colors.accent} />
-        <Text style={styles.reward}>{reward}</Text>
-      </View>
       <View style={styles.progressContainer}>
         <ProgressBar
           progress={progress}
-          height={8}
-          color={isCompleted ? colors.status.success : colors.accent}
+          height={6}
+          backgroundColor={colors.surface}
+          progressColor={isCompleted ? colors.status.success : colors.accent}
         />
-        <Text style={styles.progressText}>{progress}%</Text>
+        <Text style={styles.progressText}>
+          {Math.round(progress * 100)}%
+        </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.card,
+    borderRadius: spacing.sm,
     padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  glow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 8,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  icon: {
-    marginRight: spacing.sm,
+    marginBottom: spacing.xs,
   },
   title: {
-    ...typography.h3,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.fontSize.md,
+    fontWeight: 'bold',
     color: colors.text.primary,
   },
-  description: {
-    ...typography.body,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-  },
-  rewardContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
   reward: {
-    ...typography.body,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.fontSize.sm,
     color: colors.accent,
-    marginLeft: spacing.xs,
+    fontWeight: 'bold',
+  },
+  description: {
+    fontFamily: typography.fontFamily,
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    marginBottom: spacing.sm,
   },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   progressText: {
-    ...typography.caption,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.fontSize.xs,
     color: colors.text.secondary,
     marginLeft: spacing.sm,
   },

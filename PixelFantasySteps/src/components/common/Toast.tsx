@@ -1,30 +1,30 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { colors, typography, spacing, shadows } from '../../styles/theme';
+import { colors, spacing, typography } from '../../styles/theme';
 
 interface ToastProps {
   message: string;
-  type?: 'success' | 'info' | 'warning' | 'error';
+  type?: 'success' | 'error' | 'warning' | 'info';
   duration?: number;
-  onClose?: () => void;
+  onHide?: () => void;
 }
 
 export const Toast: React.FC<ToastProps> = ({
   message,
   type = 'info',
   duration = 3000,
-  onClose,
+  onHide,
 }) => {
-  const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = new Animated.Value(-100);
+  const opacity = new Animated.Value(0);
 
   useEffect(() => {
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 50,
-        friction: 7,
+        friction: 8,
+        tension: 40,
       }),
       Animated.timing(opacity, {
         toValue: 1,
@@ -38,8 +38,8 @@ export const Toast: React.FC<ToastProps> = ({
         Animated.spring(translateY, {
           toValue: -100,
           useNativeDriver: true,
-          tension: 50,
-          friction: 7,
+          friction: 8,
+          tension: 40,
         }),
         Animated.timing(opacity, {
           toValue: 0,
@@ -47,23 +47,23 @@ export const Toast: React.FC<ToastProps> = ({
           useNativeDriver: true,
         }),
       ]).start(() => {
-        onClose?.();
+        onHide?.();
       });
     }, duration);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [duration, onHide]);
 
   const getBackgroundColor = () => {
     switch (type) {
       case 'success':
         return colors.status.success;
-      case 'warning':
-        return colors.status.warning;
       case 'error':
         return colors.status.error;
+      case 'warning':
+        return colors.status.warning;
       default:
-        return colors.primary;
+        return colors.status.info;
     }
   };
 
@@ -79,8 +79,8 @@ export const Toast: React.FC<ToastProps> = ({
       ]}
     >
       <Text style={styles.message}>{message}</Text>
-      <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-        <Text style={styles.closeButtonText}>×</Text>
+      <TouchableOpacity onPress={onHide} style={styles.closeButton}>
+        <Text style={styles.closeText}>×</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -96,20 +96,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...shadows.medium,
     zIndex: 1000,
   },
   message: {
-    ...typography.body,
-    color: colors.surface,
+    color: colors.text.primary,
+    fontFamily: typography.fontFamily,
+    fontSize: typography.sm,
     flex: 1,
   },
   closeButton: {
     padding: spacing.xs,
   },
-  closeButtonText: {
-    ...typography.title,
-    color: colors.surface,
-    fontSize: 24,
+  closeText: {
+    color: colors.text.primary,
+    fontSize: typography.lg,
+    fontFamily: typography.fontFamily,
   },
 }); 

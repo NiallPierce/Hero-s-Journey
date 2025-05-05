@@ -1,121 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { QuestCard } from './common/QuestCard';
-import { colors, spacing, typography } from '../styles/theme';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { colors } from '../../styles/theme';
 
-interface Quest {
-  id: string;
-  title: string;
-  description: string;
-  stepsRequired: number;
-  completed: boolean;
-  reward: string;
+interface ConfettiProps {
+  duration?: number;
+  onComplete?: () => void;
 }
 
-interface DailyQuestsProps {
-  currentSteps: number;
-}
+type StatusColor = 'success' | 'warning' | 'info';
 
-const generateQuests = (): Quest[] => {
-  const questTypes = [
-    {
-      title: 'Morning Jog',
-      description: 'Start your day with a refreshing jog',
-      baseSteps: 2000,
-    },
-    {
-      title: 'Forest Path',
-      description: 'Explore the mystical forest trails',
-      baseSteps: 3000,
-    },
-    {
-      title: 'Mountain Trek',
-      description: 'Climb the ancient mountain paths',
-      baseSteps: 4000,
-    },
-  ];
-
-  return questTypes.map((type, index) => ({
-    id: `quest-${index}`,
-    title: type.title,
-    description: type.description,
-    stepsRequired: type.baseSteps + Math.floor(Math.random() * 1000),
-    completed: false,
-    reward: `${Math.floor(type.baseSteps / 100)} XP`,
+export const Confetti: React.FC<ConfettiProps> = ({
+  duration = 3000,
+  onComplete,
+}) => {
+  const particles = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+    y: new Animated.Value(-20),
+    rotation: new Animated.Value(0),
+    scale: new Animated.Value(1),
+    color: colors.status[['success', 'warning', 'info'][i % 3] as StatusColor],
   }));
-};
-
-export const DailyQuests: React.FC<DailyQuestsProps> = ({ currentSteps }) => {
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
 
   useEffect(() => {
-    const loadQuests = async () => {
-      try {
-        const savedData = await AsyncStorage.getItem('dailyQuests');
-        if (savedData) {
-          const { quests: savedQuests, date } = JSON.parse(savedData);
-          const today = new Date().toDateString();
-          
-          if (date === today) {
-            setQuests(savedQuests);
-            setLastUpdated(date);
-          } else {
-            const newQuests = generateQuests();
-            setQuests(newQuests);
-            setLastUpdated(today);
-            await AsyncStorage.setItem('dailyQuests', JSON.stringify({
-              quests: newQuests,
-              date: today,
-            }));
-          }
-        } else {
-          const newQuests = generateQuests();
-          setQuests(newQuests);
-          setLastUpdated(new Date().toDateString());
-          await AsyncStorage.setItem('dailyQuests', JSON.stringify({
-            quests: newQuests,
-            date: new Date().toDateString(),
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading daily quests:', error);
-      }
-    };
+    const animations = particles.map((particle) => {
+      const randomX = Math.random() * 200 - 100;
+      const randomY = Math.random() * 500 + 200;
+      const randomRotation = Math.random() * 360;
 
-    loadQuests();
-  }, []);
+      return Animated.parallel([
+        Animated.timing(particle.x, {
+          toValue: randomX,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.y, {
+          toValue: randomY,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(particle.rotation, {
+          toValue: randomRotation,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(particle.scale, {
+            toValue: 1.2,
+            duration: duration / 2,
+            useNativeDriver: true,
+          }),
+          Animated.timing(particle.scale, {
+            toValue: 0,
+            duration: duration / 2,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]);
+    });
 
-  useEffect(() => {
-    const updateQuests = async () => {
-      const updatedQuests = quests.map(quest => ({
-        ...quest,
-        completed: currentSteps >= quest.stepsRequired,
-      }));
-
-      setQuests(updatedQuests);
-      await AsyncStorage.setItem('dailyQuests', JSON.stringify({
-        quests: updatedQuests,
-        date: lastUpdated,
-      }));
-    };
-
-    updateQuests();
-  }, [currentSteps]);
+    Animated.parallel(animations).start(() => {
+      onComplete?.();
+    });
+  }, [duration, onComplete]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Quests</Text>
-      {quests.map(quest => (
-        <QuestCard
-          key={quest.id}
-          title={quest.title}
-          description={quest.description}
-          reward={quest.reward}
-          progress={Math.min(100, (currentSteps / quest.stepsRequired) * 100)}
-          isCompleted={quest.completed}
-          style={styles.questCard}
+      {particles.map((particle) => (
+        <Animated.View
+          key={particle.id}
+          style={[
+            styles.particle,
+            {
+              backgroundColor: particle.color,
+              transform: [
+                { translateX: particle.x },
+                { translateY: particle.y },
+                { rotate: particle.rotation.interpolate({
+                    inputRange: [0, 360],
+                    outputRange: ['0deg', '360deg'],
+                  }) },
+                { scale: particle.scale },
+              ],
+            },
+          ]}
         />
       ))}
     </View>
@@ -124,14 +92,13 @@ export const DailyQuests: React.FC<DailyQuestsProps> = ({ currentSteps }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: spacing.md,
+    ...StyleSheet.absoluteFillObject,
+    pointerEvents: 'none',
   },
-  title: {
-    ...typography.h2,
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-  },
-  questCard: {
-    marginBottom: spacing.md,
+  particle: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 }); 

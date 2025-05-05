@@ -1,275 +1,154 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { Card } from './common/Card';
-import { ProgressBar } from './common/ProgressBar';
-import { Toast } from './common/Toast';
-import Confetti from './common/Confetti';
-import { colors, typography, spacing, shadows, borderRadius } from '../styles/theme';
+import { TextStyle } from 'react-native';
 
-interface CharacterLevelProps {
-  currentSteps: number;
-}
-
-interface Rank {
-  title: string;
-  subLevels: number;
-  stepsRequired: number;
-}
-
-const RANKS: Rank[] = [
-  { title: 'Novice', subLevels: 5, stepsRequired: 1000 },
-  { title: 'Apprentice', subLevels: 5, stepsRequired: 5000 },
-  { title: 'Adventurer', subLevels: 5, stepsRequired: 10000 },
-  { title: 'Explorer', subLevels: 5, stepsRequired: 20000 },
-  { title: 'Hero', subLevels: 5, stepsRequired: 40000 },
-  { title: 'Champion', subLevels: 5, stepsRequired: 80000 },
-  { title: 'Master', subLevels: 5, stepsRequired: 160000 },
-  { title: 'Legend', subLevels: 5, stepsRequired: 320000 },
-  { title: 'Mythic', subLevels: 5, stepsRequired: 640000 },
-  { title: 'Divine', subLevels: 5, stepsRequired: 1000000 },
-  { title: 'Celestial', subLevels: 5, stepsRequired: 2000000 },
-  { title: 'Cosmic', subLevels: 5, stepsRequired: 4000000 },
-  { title: 'Eternal', subLevels: 5, stepsRequired: 8000000 },
-  { title: 'Transcendent', subLevels: 5, stepsRequired: 16000000 },
-  { title: 'Omnipotent', subLevels: 5, stepsRequired: 32000000 }
-];
-
-const calculateRankAndSubLevel = (steps: number): { rank: Rank; subLevel: number; progress: number } => {
-  let totalStepsRequired = 0;
+export const colors = {
+  // Main theme colors
+  primary: '#7B2CBF', // Rich purple
+  secondary: '#3A0CA3', // Deep indigo
+  accent: '#F72585', // Vibrant pink
+  background: '#10002B', // Deepest purple-black
+  surface: '#240046', // Dark purple
+  card: '#3C096C', // Rich purple-black
   
-  for (let i = 0; i < RANKS.length; i++) {
-    const rank = RANKS[i];
-    const nextRank = RANKS[i + 1];
-    
-    if (!nextRank || steps < totalStepsRequired + rank.stepsRequired) {
-      const stepsInCurrentRank = steps - totalStepsRequired;
-      const stepsPerSubLevel = rank.stepsRequired / rank.subLevels;
-      const subLevel = Math.floor(stepsInCurrentRank / stepsPerSubLevel) + 1;
-      const progress = ((stepsInCurrentRank % stepsPerSubLevel) / stepsPerSubLevel) * 100;
-      
-      return {
-        rank,
-        subLevel: Math.min(subLevel, rank.subLevels),
-        progress: Math.min(100, Math.max(0, progress))
-      };
-    }
-    
-    totalStepsRequired += rank.stepsRequired;
+  // Text colors
+  text: {
+    primary: '#E9ECEF', // Off-white
+    secondary: '#CED4DA', // Light gray
+    accent: '#FF9E00', // Warm gold
+    dark: '#212529', // Dark gray
+  },
+  
+  // Status colors
+  status: {
+    success: '#4CC9F0', // Bright cyan
+    warning: '#FF9E00', // Warm orange
+    error: '#F72585', // Vibrant pink
+    info: '#4361EE', // Bright blue
+  },
+  
+  // UI elements
+  border: '#5A189A', // Medium purple
+  divider: '#3C096C', // Rich purple-black
+  overlay: 'rgba(16, 0, 43, 0.9)', // Dark purple overlay
+  
+  // Rank colors - Gradient progression from cool to warm
+  ranks: {
+    novice: '#4361EE', // Bright blue
+    apprentice: '#3A0CA3', // Deep indigo
+    adventurer: '#4CC9F0', // Bright cyan
+    explorer: '#4895EF', // Sky blue
+    hero: '#F72585', // Vibrant pink
+    champion: '#B5179E', // Deep pink
+    master: '#FF9E00', // Warm orange
+    grandmaster: '#FFD60A', // Bright yellow
+    legend: '#FFD60A', // Bright yellow
+    mythic: '#F72585', // Vibrant pink
+    divine: '#B5179E', // Deep pink
+    celestial: '#4CC9F0', // Bright cyan
+    cosmic: '#3A0CA3', // Deep indigo
+    eternal: '#4361EE', // Bright blue
+    transcendent: '#F72585', // Vibrant pink
+    omnipotent: '#FFD60A', // Bright yellow
   }
-  
-  // If we get here, the player has reached the maximum rank
-  return {
-    rank: RANKS[RANKS.length - 1],
-    subLevel: RANKS[RANKS.length - 1].subLevels,
-    progress: 100
-  };
 };
 
-const getRankColor = (rankTitle: string): string => {
-  const rankKey = rankTitle.toLowerCase() as keyof typeof colors.ranks;
-  return colors.ranks[rankKey] || colors.ranks.novice;
+export const typography = {
+  fontFamily: 'System',
+  fontSize: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
+  },
+  // Add direct access to font sizes
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 20,
+  xxl: 24,
+  styles: {
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text.primary,
+      textShadowColor: 'rgba(0, 0, 0, 0.5)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 2,
+    },
+    subtitle: {
+      fontSize: 22,
+      fontWeight: '600',
+      color: colors.text.primary,
+      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 1,
+    },
+    body: {
+      fontSize: 16,
+      fontWeight: '400',
+      color: colors.text.primary,
+    },
+    caption: {
+      fontSize: 14,
+      fontWeight: '400',
+      color: colors.text.secondary,
+    },
+    small: {
+      fontSize: 12,
+      fontWeight: '400',
+      color: colors.text.secondary,
+    },
+  } as Record<string, TextStyle>,
 };
 
-export const CharacterLevel: React.FC<CharacterLevelProps> = ({ currentSteps }: CharacterLevelProps) => {
-  const [rankInfo, setRankInfo] = useState(calculateRankAndSubLevel(currentSteps));
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const scale = new Animated.Value(1);
-  const opacity = new Animated.Value(1);
-  const rankColor = getRankColor(rankInfo.rank.title);
-
-  useEffect(() => {
-    const newRankInfo = calculateRankAndSubLevel(currentSteps);
-    if (newRankInfo.subLevel > rankInfo.subLevel || 
-        (newRankInfo.rank.title !== rankInfo.rank.title && newRankInfo.subLevel === 1)) {
-      setRankInfo(newRankInfo);
-      
-      // Show confetti immediately
-      setShowConfetti(true);
-      
-      // Show toast after a short delay
-      setTimeout(() => {
-        setShowToast(true);
-      }, 500);
-      
-      // Reset confetti after animation
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 3000);
-    } else {
-      // Update progress even if rank hasn't changed
-      setRankInfo(newRankInfo);
-    }
-  }, [currentSteps]);
-
-  const handleConfettiComplete = () => {
-    console.log('Confetti animation completed');
-    setShowConfetti(false);
-  };
-
-  const handleToastClose = () => {
-    setShowToast(false);
-  };
-
-  React.useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(scale, {
-          toValue: 1.2,
-          useNativeDriver: true,
-          friction: 8,
-          tension: 40,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.8,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-          friction: 8,
-          tension: 40,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, [rankInfo.subLevel]);
-
-  return (
-    <>
-      <Card style={[styles.card, { backgroundColor: colors.card }]}>
-        <View style={[styles.container, { backgroundColor: rankColor }]}>
-          <Text style={styles.title}>Character Rank</Text>
-          <View style={styles.levelContainer}>
-            <Animated.Text 
-              style={[
-                styles.levelText,
-                { 
-                  transform: [{ scale }],
-                  opacity,
-                  textShadowColor: 'rgba(0, 0, 0, 0.7)',
-                  textShadowOffset: { width: 2, height: 2 },
-                  textShadowRadius: 4,
-                }
-              ]}
-            >
-              {rankInfo.rank.title} {rankInfo.subLevel}
-            </Animated.Text>
-          </View>
-          <View style={styles.progressContainer}>
-            <ProgressBar
-              progress={rankInfo.progress}
-              milestones={[25, 50, 75]}
-              height={12}
-              color={colors.accent}
-            />
-            <Text style={styles.progressText}>
-              {Math.round(rankInfo.progress)}% to next rank
-            </Text>
-          </View>
-        </View>
-      </Card>
-      {showConfetti && (
-        <View style={styles.confettiContainer}>
-          <Confetti onComplete={handleConfettiComplete} />
-        </View>
-      )}
-      {showToast && (
-        <Toast
-          message={`Rank Up! You are now ${rankInfo.rank.title} ${rankInfo.subLevel}`}
-          type="success"
-          onClose={handleToastClose}
-        />
-      )}
-    </>
-  );
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
 };
 
-const styles = StyleSheet.create({
-  card: {
-    overflow: 'hidden',
-    ...shadows.large,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+export const borderRadius = {
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  xxl: 24,
+};
+
+export const shadows = {
+  small: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  container: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: 1,
-  },
-  levelContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+  medium: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
     shadowRadius: 6,
+    elevation: 6,
+  },
+  large: {
+    shadowColor: colors.accent,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     elevation: 8,
   },
-  levelText: {
-    ...typography.title,
-    fontSize: 36,
-    color: colors.text.primary,
-    fontWeight: 'bold',
-    letterSpacing: 1.5,
-  },
-  progressContainer: {
-    marginTop: spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  progressText: {
-    ...typography.small,
-    color: colors.text.primary,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-    letterSpacing: 0.5,
-  },
-  confettiContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 9999,
-    pointerEvents: 'none',
-    elevation: 9999,
-  },
-}); 
+}; 
