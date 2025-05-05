@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QuestCard } from './common/QuestCard';
+import { colors, spacing, typography } from '../styles/theme';
 
 interface Quest {
   id: string;
@@ -106,25 +108,15 @@ export const DailyQuests: React.FC<DailyQuestsProps> = ({ currentSteps }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Daily Quests</Text>
       {quests.map(quest => (
-        <View
+        <QuestCard
           key={quest.id}
-          style={[
-            styles.questCard,
-            quest.completed ? styles.completedQuest : styles.activeQuest,
-          ]}
-        >
-          <Text style={styles.questTitle}>{quest.title}</Text>
-          <Text style={styles.questDescription}>{quest.description}</Text>
-          <View style={styles.questProgress}>
-            <Text style={styles.stepsText}>
-              {Math.min(currentSteps, quest.stepsRequired)} / {quest.stepsRequired} steps
-            </Text>
-            <Text style={styles.rewardText}>Reward: {quest.reward}</Text>
-          </View>
-          {quest.completed && (
-            <Text style={styles.completedText}>✓ Completed!</Text>
-          )}
-        </View>
+          title={quest.title}
+          description={quest.description}
+          reward={quest.reward}
+          progress={Math.min(100, (currentSteps / quest.stepsRequired) * 100)}
+          isCompleted={quest.completed}
+          style={styles.questCard}
+        />
       ))}
     </View>
   );
@@ -132,56 +124,14 @@ export const DailyQuests: React.FC<DailyQuestsProps> = ({ currentSteps }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: spacing.md,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 15,
+    ...typography.h2,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
   },
   questCard: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  activeQuest: {
-    backgroundColor: '#fff',
-    borderColor: '#3498db',
-  },
-  completedQuest: {
-    backgroundColor: '#e8f5e9',
-    borderColor: '#81c784',
-  },
-  questTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 5,
-  },
-  questDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-  },
-  questProgress: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  stepsText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  rewardText: {
-    fontSize: 14,
-    color: '#f39c12',
-    fontWeight: 'bold',
-  },
-  completedText: {
-    color: '#2e7d32',
-    fontWeight: 'bold',
-    marginTop: 10,
+    marginBottom: spacing.md,
   },
 }); 

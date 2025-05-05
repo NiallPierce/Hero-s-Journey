@@ -1,106 +1,79 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { colors, typography, borderRadius } from '../../styles/theme';
+import { colors } from '../../styles/theme';
 
 interface ProgressBarProps {
   progress: number;
-  milestones?: number[];
   height?: number;
-  showPercentage?: boolean;
   color?: string;
+  milestones?: number[];
+  style?: any;
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
-  milestones = [],
-  height = 10,
-  showPercentage = true,
+  height = 4,
   color = colors.accent,
+  milestones = [],
+  style,
 }) => {
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const widthAnim = React.useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    Animated.timing(progressAnim, {
+  React.useEffect(() => {
+    Animated.timing(widthAnim, {
       toValue: progress,
-      duration: 300,
+      duration: 500,
       useNativeDriver: false,
     }).start();
   }, [progress]);
 
-  const width = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
-  });
-
   return (
-    <View style={styles.container}>
-      <View style={[styles.track, { height }]}>
-        <Animated.View
+    <View style={[styles.container, { height }, style]}>
+      <Animated.View
+        style={[
+          styles.progress,
+          {
+            width: widthAnim.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'],
+            }),
+            backgroundColor: color,
+          },
+        ]}
+      />
+      {milestones.map((milestone, index) => (
+        <View
+          key={index}
           style={[
-            styles.fill,
+            styles.milestone,
             {
-              height,
-              backgroundColor: color,
-              width,
+              left: `${milestone}%`,
+              backgroundColor: progress >= milestone ? color : colors.border,
             },
           ]}
         />
-        {milestones.map((milestone, index) => (
-          <View
-            key={index}
-            style={[
-              styles.milestone,
-              {
-                left: `${milestone}%`,
-                height: height * 1.5,
-              },
-            ]}
-          />
-        ))}
-      </View>
-      {showPercentage && (
-        <Animated.Text style={styles.percentage}>
-          {Math.round(progress)}%
-        </Animated.Text>
-      )}
+      ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-  },
-  track: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: borderRadius.sm,
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 4,
     overflow: 'hidden',
-    position: 'relative',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: colors.border,
   },
-  fill: {
-    borderRadius: borderRadius.sm,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
-    elevation: 4,
+  progress: {
+    height: '100%',
+    borderRadius: 4,
   },
   milestone: {
     position: 'absolute',
     width: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    top: -25,
-  },
-  percentage: {
-    ...typography.small,
-    color: colors.text.primary,
-    marginTop: 4,
-    textAlign: 'right',
-    fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    height: '100%',
+    backgroundColor: colors.border,
   },
 }); 
